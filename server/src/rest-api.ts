@@ -18,6 +18,26 @@ app.use(express.json());
 ##################################################
 */
 
+// Get secret
+app.get("/secret/:secretId", async (req, res) => {
+  const { secretId } = req.params;
+
+  res.json({ secretId });
+});
+
+// Create shareable secret link
+app.post("/secret", async (req, res) => {
+  const {
+    activeDays,
+    password,
+    content,
+  }: { activeDays: string; password: string; content: string } = req.body;
+
+  // TODO: Input validation
+
+  res.json({ activeDays, password, content });
+});
+
 // Root endpoint - Returns a simple hello world message and default client port
 app.get("/", async (_req, res) => {
   res.json({ hello: "world", "client-default-port": 3000 });

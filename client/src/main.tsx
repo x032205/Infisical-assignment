@@ -3,14 +3,15 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import { BrowserRouter, Route, Routes } from "react-router";
 import CreateSecretPage from "./pages/CreateSecretPage";
-import SecondPage from "./pages/SecondPage";
+import ViewSecretPage from "./pages/ViewSecretPage";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<CreateSecretPage />} />
-        <Route path="/second" element={<SecondPage />} />
+
+        <Route path="/share/:secretId" element={<ViewSecretPage />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

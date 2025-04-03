@@ -27,4 +27,37 @@
     body {
         @apply bg-background text-foreground;
     }
+
+    input:focus,
+    textarea:focus {
+        outline: none !important;
+        box-shadow: none !important;
+        border-color: hsl(var(--accent));
+    }
+}
+
+@layer utilities {
+    .remove-increment input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .remove-increment input[type="number"] {
+        -moz-appearance: textfield;
+    }
+}
+
+@layer components {
+    .input {
+        @apply px-2 py-1 bg-muted border rounded remove-increment;
+    }
+
+    .textarea {
+        @apply p-2 bg-muted border rounded;
+    }
+
+    .accent-button {
+        @apply h-9 px-4 rounded text-accent-foreground font-medium bg-accent hover:bg-accent/80 transition-colors duration-100;
+    }
 }
