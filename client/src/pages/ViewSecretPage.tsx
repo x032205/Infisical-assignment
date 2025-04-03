@@ -1,9 +1,9 @@
-// import { Link } from "react-router";
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 function ViewSecretPage() {
   const { secretId } = useParams();
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [secret, setSecret] = useState<{
@@ -15,7 +15,6 @@ function ViewSecretPage() {
   const [passwordRequired, setPasswordRequired] = useState(false);
   const [password, setPassword] = useState("");
 
-  // Fetch secret on page load
   const fetchSecret = async (pwd?: string) => {
     try {
       const url = pwd
@@ -25,9 +24,6 @@ function ViewSecretPage() {
       const response = await fetch(url);
 
       if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error("Secret not found");
-        }
         throw new Error("Failed to fetch secret");
       }
 
@@ -86,6 +82,7 @@ function ViewSecretPage() {
       {loading && <span className="animate-pulse">Loading...</span>}
       {error && <span className="text-red-400">Error: {error}</span>}
 
+      {/* Actual secret card */}
       {!loading && !error && !passwordRequired && secret && (
         <div className="flex flex-col bg-card border rounded py-3 px-4 w-full max-w-lg gap-1">
           <span className="text-muted-foreground text-sm">

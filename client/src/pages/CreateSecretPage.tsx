@@ -7,6 +7,7 @@ function CreateSecretPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSlug(null);
+
     const formData = new FormData(e.target as HTMLFormElement);
     const formDataObj = Object.fromEntries(formData.entries());
 
@@ -22,7 +23,7 @@ function CreateSecretPage() {
           method: "POST",
           body: JSON.stringify({
             ...formDataObj,
-            activeDays: convertedActiveDays,
+            activeDays: convertedActiveDays, // Replace activeDays with the converted variable
           }),
           headers: {
             "Content-Type": "application/json",
@@ -35,8 +36,6 @@ function CreateSecretPage() {
       }
 
       const data = await response.json();
-
-      console.log(data);
 
       if (!data.success) {
         throw new Error(data.errorMessage || "Failed to create secret");

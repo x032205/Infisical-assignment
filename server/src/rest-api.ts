@@ -37,7 +37,7 @@ schedule.scheduleJob("0 3 * * *", async function () {
 */
 
 // My error handling here is a bit wacky due to my time restraints.
-// I need custom error codes but dont want to waste time on a whole zod validation setup.
+// I need custom error codes but dont want to waste time on a whole error handling setup.
 
 // Get secret endpoint
 app.get("/secret/:secretSlug", async (req, res) => {
