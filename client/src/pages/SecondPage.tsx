@@ -3,7 +3,7 @@ import reactLogo from "../assets/react.svg";
 
 function SecondPage() {
   return (
-    <div className="h-screen bg-black flex justify-center items-center flex-col space-x-4 text-white">
+    <div className="h-screen flex justify-center items-center flex-col space-x-4">
       <div>
         <a href="https://react.dev" target="_blank">
           <img src={reactLogo} alt="React logo" className="w-36 h-36" />
