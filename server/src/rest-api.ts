@@ -1,3 +1,4 @@
+import schedule from "node-schedule";
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
@@ -5,10 +6,27 @@ dotenv.config();
 
 const app = express();
 import { db } from "./db/knex";
+import {
+  createSecret,
+  fetchSecretUsingSlug,
+} from "./services/secret-sharing/secret-sharing-service";
 
-//middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
+
+// Clean expired secrets chron job (every day at 3 AM)
+//
+// To see in action: Set a secret's expires_at date to before today and change the first chron job param to "*/5 * * * * *" so it runs every 5 seconds.
+schedule.scheduleJob("0 3 * * *", async function () {
+  console.log("--- Clearing Expired Secrets ---");
+
+  const deletedCount = await db("secrets")
+    .where("expires_at", "<=", new Date())
+    .del();
+
+  console.log(`Successfully deleted ${deletedCount} expired secrets`);
+});
 
 /*
 ##################################################
@@ -18,25 +36,75 @@ app.use(express.json());
 ##################################################
 */
 
-// Get secret
-app.get("/secret/:secretId", async (req, res) => {
-  const { secretId } = req.params;
+// My error handling here is a bit wacky due to my time restraints.
+// I need custom error codes but dont want to waste time on a whole zod validation setup.
 
-  res.json({ secretId });
+// Get secret endpoint
+app.get("/secret/:secretSlug", async (req, res) => {
+  const { secretSlug } = req.params;
+  const { password } = req.query;
+
+  if (typeof password !== "string" && password) {
+    res.json({
+      success: false,
+      errorCode: "BAD_REQUEST",
+      errorMessage:
+        "Password query parameter must be of type string or undefined",
+    });
+    return;
+  }
+
+  const response = await fetchSecretUsingSlug(
+    secretSlug,
+    password as string | undefined,
+  );
+
+  res.json(response);
 });
 
-// Create shareable secret link
+// Create shareable secret link endpoint
 app.post("/secret", async (req, res) => {
   const {
     activeDays,
     password,
     content,
-  }: { activeDays: string; password: string; content: string } = req.body;
+  }: { activeDays: number; password?: string; content: string } = req.body;
 
-  // TODO: Input validation
+  // Input validation & error handling
+  if (!content || !activeDays) {
+    res.json({
+      success: false,
+      errorCode: "BAD_REQUEST",
+      errorMessage: "Request body must contain content and activeDays",
+    });
+    return;
+  }
 
-  res.json({ activeDays, password, content });
+  if (activeDays <= 0 || activeDays > 365) {
+    res.json({
+      success: false,
+      errorCode: "BAD_REQUEST",
+      errorMessage: "activeDays parameter must be between 0 and 365",
+    });
+    return;
+  }
+
+  if (typeof password !== "string" && password) {
+    res.json({
+      success: false,
+      errorCode: "BAD_REQUEST",
+      errorMessage: "Password parameter must be of type string or undefined",
+    });
+    return;
+  }
+
+  // Create the secret
+  const secret = await createSecret(content, activeDays, password || undefined);
+
+  res.json({ success: true, data: secret });
 });
+
+// ---------------------------------------- BOILERPLATE CODE BELOW ----------------------------------------
 
 // Root endpoint - Returns a simple hello world message and default client port
 app.get("/", async (_req, res) => {

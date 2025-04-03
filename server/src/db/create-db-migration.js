@@ -1,8 +1,13 @@
 /* eslint-disable */
 import { execSync } from "child_process";
-import path from "path";
+import path, { dirname } from "path";
 import promptSync from "prompt-sync";
 import slugify from "@sindresorhus/slugify";
+import { fileURLToPath } from "url";
+
+// Fix for "ReferenceError: __dirname is not defined in ES module scope"
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const prompt = promptSync({ sigint: true });
 

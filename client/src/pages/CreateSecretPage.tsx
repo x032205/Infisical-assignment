@@ -1,31 +1,56 @@
+import { useState } from "react";
+
 function CreateSecretPage() {
+  const [slug, setSlug] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSlug(null);
     const formData = new FormData(e.target as HTMLFormElement);
     const formDataObj = Object.fromEntries(formData.entries());
 
-    const convertedActiveDays = Number(formDataObj.activeDays);
-    if (isNaN(convertedActiveDays)) {
-      // TODO: Swap to less intrusive error
-      throw new Error("Active days must be a valid number");
+    try {
+      const convertedActiveDays = Number(formDataObj.activeDays);
+      if (isNaN(convertedActiveDays)) {
+        throw new Error("Active days must be a valid number");
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_PUBLIC_API_URL}/secret`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            ...formDataObj,
+            activeDays: convertedActiveDays,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to create secret");
+      }
+
+      const data = await response.json();
+
+      console.log(data);
+
+      if (!data.success) {
+        throw new Error(data.errorMessage || "Failed to create secret");
+      } else {
+        setSlug(data.data.slug);
+        setError(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     }
-
-    // TODO: More client-side input validation
-
-    const response = await fetch("http://localhost:8000/create-link", {
-      method: "POST",
-      body: JSON.stringify({ ...formDataObj, activeDays: convertedActiveDays }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    const result = await response.json();
-    console.log(result);
   };
 
   return (
-    <div className="h-screen flex justify-center items-center flex-col px-2">
+    <div className="h-screen flex justify-center items-center flex-col px-2 gap-2">
       <form
         onSubmit={handleSubmit}
         className="flex flex-col p-4 rounded border bg-card w-full max-w-xl"
@@ -74,7 +99,25 @@ function CreateSecretPage() {
             Create
           </button>
         </div>
+
+        {/* Display Slug */}
+        {slug && (
+          <div className="mt-4 p-2 bg-muted rounded">
+            <span>
+              Your secret link:{" "}
+              <a
+                href={`${import.meta.env.VITE_PUBLIC_SITE_URL}/share/${slug}`}
+                target="_blank"
+                className="text-accent"
+              >
+                {import.meta.env.VITE_PUBLIC_SITE_URL}/share/{slug}
+              </a>
+            </span>
+          </div>
+        )}
       </form>
+
+      {error && <span className="text-red-400">Error: {error}</span>}
     </div>
   );
 }
