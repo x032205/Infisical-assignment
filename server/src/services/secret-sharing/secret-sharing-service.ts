@@ -35,11 +35,17 @@ async function deriveEncryptionKey(
 }
 
 // Create a secret and return its slug
-export async function createSecret(
-  content: string,
-  daysActive: number,
-  password?: string,
-) {
+export async function createSecret({
+  content,
+  daysActive,
+  viewsCount,
+  password,
+}: {
+  content: string;
+  daysActive: number;
+  viewsCount?: number;
+  password?: string;
+}) {
   let slug: string;
   let attempts = 0;
 
@@ -55,6 +61,8 @@ export async function createSecret(
         slug,
         password_hash: password ? await argon2.hash(password) : null,
         expires_at: new Date(Date.now() + daysActive * 24 * 60 * 60 * 1000), // Today + daysActive
+        max_views_count: viewsCount,
+        views_count: viewsCount ? 0 : null,
       })
       .returning("id");
 
@@ -116,7 +124,31 @@ export async function fetchSecretUsingSlug(
 
   // Check expiry
   if (new Date() > new Date(secret.expires_at)) {
-    throw new Error("Secret has recently expired");
+    return {
+      success: false,
+      errorCode: "NOT_FOUND",
+      errorMessage: "Secret has recently expired.",
+    };
+  }
+
+  // Check if views count is over max_views_count
+  if (
+    secret.views_count !== null &&
+    secret.max_views_count !== null &&
+    secret.views_count > secret.max_views_count
+  ) {
+    return {
+      success: false,
+      errorCode: "NOT_FOUND",
+      errorMessage: "Secret has been viewed too much.",
+    };
+  }
+
+  // Increment view count
+  if (secret.views_count !== null) {
+    await db("secrets")
+      .update("views_count", secret.views_count + 1)
+      .where({ id: secret.id });
   }
 
   // Check password if secret has one

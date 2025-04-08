@@ -68,7 +68,15 @@ app.post("/secret", async (req, res) => {
     activeDays,
     password,
     content,
-  }: { activeDays: number; password?: string; content: string } = req.body;
+    viewsCount,
+  }: {
+    activeDays: number;
+    password?: string;
+    content: string;
+    viewsCount: number;
+  } = req.body;
+
+  console.log(viewsCount);
 
   // Input validation & error handling
   if (!content || !activeDays) {
@@ -89,6 +97,15 @@ app.post("/secret", async (req, res) => {
     return;
   }
 
+  if (viewsCount <= 0 || viewsCount > 100) {
+    res.json({
+      success: false,
+      errorCode: "BAD_REQUEST",
+      errorMessage: "viewsCount parameter must be between 0 and 100",
+    });
+    return;
+  }
+
   if (typeof password !== "string" && password) {
     res.json({
       success: false,
@@ -99,7 +116,12 @@ app.post("/secret", async (req, res) => {
   }
 
   // Create the secret
-  const secret = await createSecret(content, activeDays, password || undefined);
+  const secret = await createSecret({
+    content,
+    daysActive: activeDays,
+    viewsCount,
+    password: password || undefined,
+  });
 
   res.json({ success: true, data: secret });
 });
